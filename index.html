@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>롤 챔피언 카운터 추천</title>
+  <title>롤 챔피언 카운터 추천 (아이디 기반)</title>
   <style>
     body {
       font-family: 'Helvetica', 'Arial', sans-serif;
@@ -85,8 +85,8 @@
 
     async function loadCounterData() {
       const [counterRes, idRes] = await Promise.all([
-        fetch("https://lol-banpick.onrender.com/champion_counters"),
-        fetch("https://lol-banpick.onrender.com/champion_by_id")
+        fetch("champion_counters.json"),
+        fetch("champion_by_id.json")
       ]);
       const rawCounter = await counterRes.json();
       const rawId = await idRes.json();
