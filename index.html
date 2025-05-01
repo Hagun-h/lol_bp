@@ -85,8 +85,8 @@
 
     async function loadCounterData() {
       const [counterRes, idRes] = await Promise.all([
-        fetch("https://lol-banpick.onrender.com/champion_counters.json"),
-        fetch("https://lol-banpick.onrender.com/champion_by_id.json")
+        fetch("https://lol-banpick.onrender.com/champion_counters"),
+        fetch("https://lol-banpick.onrender.com/champion_by_id")
       ]);
       const rawCounter = await counterRes.json();
       const rawId = await idRes.json();
