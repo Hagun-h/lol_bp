@@ -115,9 +115,10 @@
       });
     }
 
-    ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5", "userId"].forEach(id => {
-      document.getElementById(id).addEventListener("input", getRecommendations);
+    ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5"].forEach(id => {
+      document.getElementById(id).addEventListener("blur", getRecommendations);
     });
+    document.getElementById("userId").addEventListener("change", getRecommendations);;
   </script>
 </body>
 </html>
