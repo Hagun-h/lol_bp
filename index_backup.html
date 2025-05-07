@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>롤 챔피언 카운터 추천</title>
+  <style>
+    body {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 {
+      color: #333;
+    }
+    input[type="text"] {
+      margin: 8px;
+      padding: 10px;
+      width: 260px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    #banResult {
+      background: #fff;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 320px;
+      text-align: center;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-weight: bold;
+    }
+    li:last-child {
+      border-bottom: none;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>롤 챔피언 픽 추천</h2>
+  <div class="container">
+    <select id="userId">
+      <option value="">포지션 선택</option>
+      <option value="탑">탑</option>
+      <option value="정글">정글</option>
+      <option value="미드">미드</option>
+      <option value="원딜">원딜</option>
+      <option value="서폿">서폿</option>
+    </select>
+    <input type="text" id="enemy1" placeholder="상대 챔피언 1" list="championList">
+    <input type="text" id="enemy2" placeholder="상대 챔피언 2" list="championList">
+    <input type="text" id="enemy3" placeholder="상대 챔피언 3" list="championList">
+    <input type="text" id="enemy4" placeholder="상대 챔피언 4" list="championList">
+    <input type="text" id="enemy5" placeholder="상대 챔피언 5" list="championList">
+  </div>
+
+  <datalist id="championList"></datalist>
+
+  <div id="banResult"></div>
+
+  <script>
+    let counterData = {};
+    let idChampionData = {};
+
+    function normalize(name) {
+      return name.trim().replace(/\\s+/g, "");
+    }
+
+    async function loadCounterData() {
+      const [counterRes, idRes] = await Promise.all([
+        fetch("https://lol-banpick.onrender.com/champion_counters"),
+        fetch("https://lol-banpick.onrender.com/champion_by_id")
+      ]);
+      const rawCounter = await counterRes.json();
+      const rawId = await idRes.json();
+
+      const normalizedCounter = {};
+      for (const fullName in rawCounter) {
+        const baseName = normalize(fullName);
+        if (!normalizedCounter[baseName]) {
+          normalizedCounter[baseName] = [];
+        }
+        normalizedCounter[baseName].push(...rawCounter[fullName]);
+      }
+      for (const key in normalizedCounter) {
+        normalizedCounter[key] = [...new Set(normalizedCounter[key])];
+      }
+
+      counterData = normalizedCounter;
+      idChampionData = rawId;
+
+      const datalist = document.getElementById("championList");
+      const champs = Object.keys(counterData).sort();
+      for (const champ of champs) {
+        const option = document.createElement("option");
+        option.value = champ;
+        datalist.appendChild(option);
+      }
+    }
+
+    function getRecommendations() {
+      const selectedId = normalize(document.getElementById("userId").value);
+      const allowedChamps = idChampionData[selectedId] || [];
+
+      const inputs = [
+        document.getElementById("enemy1").value,
+        document.getElementById("enemy2").value,
+        document.getElementById("enemy3").value,
+        document.getElementById("enemy4").value,
+        document.getElementById("enemy5").value
+      ].map(normalize).filter(Boolean);
+
+      const counterCount = {};
+
+      for (const champ of inputs) {
+        const counters = counterData[champ] || [];
+        for (const counter of counters) {
+          if (allowedChamps.includes(counter)) {
+            counterCount[counter] = (counterCount[counter] || 0) + 1;
+          }
+        }
+      }
+
+      const sorted = Object.entries(counterCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30);
+
+      const banList = sorted.map(([name, count], index) => {
+        const stars = "⭐".repeat(count); // 등장 횟수만큼 별표 추가
+        return `<li>${name} ${stars}</li>`;
+      }).join("");
+
+      document.getElementById("banResult").innerHTML = `
+        <strong>추천 픽</strong>
+        <ul>${banList || "<li>추천 가능한 카운터가 없습니다.</li>"}</ul>
+      `;
+    }
+
+    ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5", "userId"].forEach(id => {
+      document.getElementById(id).addEventListener("input", getRecommendations);
+    });
+
+    loadCounterData();
+  </script>
+</body>
+</html>
