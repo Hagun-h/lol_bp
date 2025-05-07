@@ -99,7 +99,11 @@
       })
       .then(res => res.json())
       .then(recommendations => {
-        const banList = recommendations.map(name => `<li>${name}</li>`).join("");
+        const banList = recommendations.map(([name, count]) => {
+          const stars = "⭐".repeat(count);
+          return `<li>${name} ${stars}</li>`;
+        }).join("");
+
         document.getElementById("banResult").innerHTML = `
           <strong>추천 픽</strong>
           <ul>${banList || "<li>추천 가능한 챔피언이 없습니다.</li>"}</ul>
