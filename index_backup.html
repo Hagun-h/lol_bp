@@ -64,62 +64,23 @@
       <option value="원딜">원딜</option>
       <option value="서폿">서폿</option>
     </select>
-    <input type="text" id="enemy1" placeholder="상대 챔피언 1" list="championList">
-    <input type="text" id="enemy2" placeholder="상대 챔피언 2" list="championList">
-    <input type="text" id="enemy3" placeholder="상대 챔피언 3" list="championList">
-    <input type="text" id="enemy4" placeholder="상대 챔피언 4" list="championList">
-    <input type="text" id="enemy5" placeholder="상대 챔피언 5" list="championList">
+    <input type="text" id="enemy1" placeholder="상대 챔피언 1">
+    <input type="text" id="enemy2" placeholder="상대 챔피언 2">
+    <input type="text" id="enemy3" placeholder="상대 챔피언 3">
+    <input type="text" id="enemy4" placeholder="상대 챔피언 4">
+    <input type="text" id="enemy5" placeholder="상대 챔피언 5">
   </div>
-
-  <datalist id="championList"></datalist>
 
   <div id="banResult"></div>
 
   <script>
-    let counterData = {};
-    let idChampionData = {};
-
     function normalize(name) {
-      return name.trim().replace(/\\s+/g, "");
-    }
-
-    async function loadCounterData() {
-      const [counterRes, idRes] = await Promise.all([
-        fetch("https://lol-banpick.onrender.com/champion_counters"),
-        fetch("https://lol-banpick.onrender.com/champion_by_id")
-      ]);
-      const rawCounter = await counterRes.json();
-      const rawId = await idRes.json();
-
-      const normalizedCounter = {};
-      for (const fullName in rawCounter) {
-        const baseName = normalize(fullName);
-        if (!normalizedCounter[baseName]) {
-          normalizedCounter[baseName] = [];
-        }
-        normalizedCounter[baseName].push(...rawCounter[fullName]);
-      }
-      for (const key in normalizedCounter) {
-        normalizedCounter[key] = [...new Set(normalizedCounter[key])];
-      }
-
-      counterData = normalizedCounter;
-      idChampionData = rawId;
-
-      const datalist = document.getElementById("championList");
-      const champs = Object.keys(counterData).sort();
-      for (const champ of champs) {
-        const option = document.createElement("option");
-        option.value = champ;
-        datalist.appendChild(option);
-      }
+      return name.trim().replace(/\s+/g, "");
     }
 
     function getRecommendations() {
-      const selectedId = normalize(document.getElementById("userId").value);
-      const allowedChamps = idChampionData[selectedId] || [];
-
-      const inputs = [
+      const position = normalize(document.getElementById("userId").value);
+      const enemies = [
         document.getElementById("enemy1").value,
         document.getElementById("enemy2").value,
         document.getElementById("enemy3").value,
@@ -127,37 +88,37 @@
         document.getElementById("enemy5").value
       ].map(normalize).filter(Boolean);
 
-      const counterCount = {};
+      if (!position || enemies.length === 0) return;
 
-      for (const champ of inputs) {
-        const counters = counterData[champ] || [];
-        for (const counter of counters) {
-          if (allowedChamps.includes(counter)) {
-            counterCount[counter] = (counterCount[counter] || 0) + 1;
-          }
-        }
-      }
+      fetch("https://lol-banpick-1.onrender.com/recommend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ position, enemies })
+      })
+      .then(res => res.json())
+      .then(recommendations => {
+        const banList = recommendations.map(([name, count]) => {
+          const stars = "⭐".repeat(count);
+          return `<li>${name} ${stars}</li>`;
+        }).join("");
 
-      const sorted = Object.entries(counterCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 30);
-
-      const banList = sorted.map(([name, count], index) => {
-        const stars = "⭐".repeat(count); // 등장 횟수만큼 별표 추가
-        return `<li>${name} ${stars}</li>`;
-      }).join("");
-
-      document.getElementById("banResult").innerHTML = `
-        <strong>추천 픽</strong>
-        <ul>${banList || "<li>추천 가능한 카운터가 없습니다.</li>"}</ul>
-      `;
+        document.getElementById("banResult").innerHTML = `
+          <strong>추천 픽</strong>
+          <ul>${banList || "<li>추천 가능한 챔피언이 없습니다.</li>"}</ul>
+        `;
+      })
+      .catch(err => {
+        console.error("에러 발생:", err);
+        document.getElementById("banResult").innerHTML = "<strong>서버 오류</strong>";
+      });
     }
 
-    ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5", "userId"].forEach(id => {
-      document.getElementById(id).addEventListener("input", getRecommendations);
+    ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5"].forEach(id => {
+      document.getElementById(id).addEventListener("blur", getRecommendations);
     });
-
-    loadCounterData();
+    document.getElementById("userId").addEventListener("change", getRecommendations);;
   </script>
 </body>
 </html>
