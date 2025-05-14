@@ -3,19 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <title>롤 챔피언 카운터 추천</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5094114011802789"
+     crossorigin="anonymous"></script>
   <style>
     body {
       font-family: 'Helvetica', 'Arial', sans-serif;
       background-color: #f7f9fc;
       margin: 0;
-      padding: 40px;
+      padding: 40px 200px; /* 좌우 여백 확보 */
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+
+    .ad-left, .ad-right {
+      position: fixed;
+      top: 100px;
+      width: 160px;
+      height: auto;
+      z-index: 10;
+    }
+
+    .ad-left {
+      left: 10px;
+    }
+
+    .ad-right {
+      right: 10px;
+    }
+
     h2 {
       color: #333;
     }
+
     input[type="text"] {
       margin: 8px;
       padding: 10px;
@@ -24,6 +44,7 @@
       border-radius: 8px;
       font-size: 14px;
     }
+
     #banResult {
       background: #fff;
       margin-top: 20px;
@@ -33,19 +54,23 @@
       width: 320px;
       text-align: center;
     }
+
     ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
+
     li {
       padding: 8px 0;
       border-bottom: 1px solid #eee;
       font-weight: bold;
     }
+
     li:last-child {
       border-bottom: none;
     }
+
     .container {
       display: flex;
       flex-direction: column;
@@ -54,6 +79,33 @@
   </style>
 </head>
 <body>
+
+  <!-- ✅ 좌측 광고 -->
+  <div class="ad-left">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-5094114011802789"
+         data-ad-slot="1234567890"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+
+  <!-- ✅ 우측 광고 -->
+  <div class="ad-right">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-5094114011802789"
+         data-ad-slot="0987654321"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+
   <h2>롤 챔피언 픽 추천</h2>
   <div class="container">
     <select id="userId">
@@ -106,7 +158,7 @@
 
         document.getElementById("banResult").innerHTML = `
           <strong>추천 픽</strong>
-          <ul>${banList || "<li>추천 가능한 챔피언이 없습니다.</li>"}</ul>
+          <ul>${banList || "<li>추천 가능한 카운터가 없습니다.</li>"}</ul>
         `;
       })
       .catch(err => {
@@ -118,7 +170,7 @@
     ["enemy1", "enemy2", "enemy3", "enemy4", "enemy5"].forEach(id => {
       document.getElementById(id).addEventListener("blur", getRecommendations);
     });
-    document.getElementById("userId").addEventListener("change", getRecommendations);;
+    document.getElementById("userId").addEventListener("change", getRecommendations);
   </script>
 </body>
 </html>
